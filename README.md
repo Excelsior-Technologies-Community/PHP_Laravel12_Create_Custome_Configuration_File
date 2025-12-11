@@ -1,59 +1,134 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# PHP_Laravel12_Create_Custome_Configuration_File
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This tutorial explains how to create your own configuration file in Laravel 12 and how to read its values inside routes or controllers.  
+It starts from creating a new Laravel project and ends with loading the custom config value in the browser.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+#  Step 1: Install Laravel 12
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Before creating a Laravel project, ensure Composer is installed.  
+Verify Composer:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```
+composer --version
+```
 
-## Learning Laravel
+Now create a new Laravel 12 project:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```
+composer create-project laravel/laravel PHP_Laravel12_Create_Custome_Configuration_File "12.*"
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+**Explanation:**
 
-## Laravel Sponsors
+- `composer create-project` → Installs a fresh Laravel application  
+- `laravel/laravel` → Official Laravel starter project  
+- `PHP_Laravel12_Create_Custome_Configuration_File` → Your project folder name  
+- `"12.*"` → Ensures Laravel version 12 is installed  
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Move into project folder:
 
-### Premium Partners
+```
+cd PHP_Laravel12_Create_Custome_Configuration_File
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+#  Step 2: Create a Custom Configuration File
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Go to the `config/` directory and create a new file:
 
-## Code of Conduct
+```
+google.php
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Open this file and add:
 
-## Security Vulnerabilities
+```php
+<?php
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+return [
 
-## License
+    'api_token' => env('GOOGLE_API_TOKEN', 'your-some-default-value'),
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+];
+```
+
+**Explanation:**
+
+- Laravel automatically loads all files stored in `config/`  
+- We created `google.php` as a custom configuration file  
+- `return [...]` contains configuration values  
+- `'api_token'` reads from `.env` using the `env()` helper  
+- If `.env` does not contain the key `GOOGLE_API_TOKEN`, the default `"your-some-default-value"` is used  
+
+---
+
+#  Step 3: Add Custom Variable in `.env`
+
+Open the `.env` file and add:
+
+```
+GOOGLE_API_TOKEN=mytestapikey123
+```
+
+**Explanation:**
+
+- The `.env` file stores all environment-specific settings  
+- We created a custom variable `GOOGLE_API_TOKEN`  
+- Laravel will read this value when `env('GOOGLE_API_TOKEN')` is called  
+- This value is now linked to the configuration file created in Step 2  
+
+---
+
+#  Step 4: Access the Custom Config Value
+
+Open the routes file:
+
+```
+routes/web.php
+```
+
+Add the route:
+
+```php
+use Illuminate\Support\Facades\Route;
+
+Route::get('helper', function () {
+
+    // Read value from config/google.php
+    $googleAPIToken = config('google.api_token');
+
+    dd($googleAPIToken); // Dump value to screen
+});
+```
+
+**Explanation:**
+
+- `config('google.api_token')` → Reads `api_token` from `config/google.php`  
+- `dd()` displays the output in the browser  
+- When visiting `/helper`, Laravel will read the config file → which reads from `.env`  
+
+---
+
+#  Step 5: Test in Browser
+
+Start the application:
+
+```
+php artisan serve
+```
+
+Open the following URL in your browser:
+
+```
+http://127.0.0.1:8000/helper
+```
+
+You will see the output:
+
+```
+mytestapikey123
+```
+<img width="984" height="394" alt="image" src="https://github.com/user-attachments/assets/86dbb6b3-639e-4f7a-b8b3-302694ffc020" />
