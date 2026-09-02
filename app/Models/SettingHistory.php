@@ -14,17 +14,33 @@ class SettingHistory extends Model
         'changed_by',
         'action',
         'meta',
+        'is_sensitive',
     ];
 
     protected function casts(): array
     {
         return [
             'meta' => 'array',
+            'is_sensitive' => 'boolean',
         ];
     }
 
     public function setting(): BelongsTo
     {
         return $this->belongsTo(Setting::class);
+    }
+
+    public function getDisplayOldValueAttribute(): string
+    {
+        return $this->is_sensitive
+            ? '••••••••••••'
+            : ($this->old_value ?? '—');
+    }
+
+    public function getDisplayNewValueAttribute(): string
+    {
+        return $this->is_sensitive
+            ? '••••••••••••'
+            : ($this->new_value ?? '—');
     }
 }
