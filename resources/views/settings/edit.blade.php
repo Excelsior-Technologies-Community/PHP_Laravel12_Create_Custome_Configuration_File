@@ -1,122 +1,300 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="max-w-3xl mx-auto">
-    <div class="flex items-center justify-between mb-6">
+
+<div class="max-w-4xl mx-auto">
+
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">
+            Edit Configuration
+        </h1>
+
+        <p class="text-gray-500 mt-1">
+            Update the selected application configuration.
+        </p>
+    </div>
+
+    <form
+        action="{{ route('settings.update', $setting) }}"
+        method="POST"
+        class="bg-white shadow-sm rounded-xl border border-gray-200 p-6"
+    >
+        @csrf
+        @method('PUT')
+
+        {{-- Key --}}
         <div>
-            <h1 class="text-xl font-bold text-slate-800">Edit Setting</h1>
-            <p class="text-sm text-slate-500 mt-1">Update configuration for <code class="bg-slate-100 px-2 py-0.5 rounded text-sm font-mono">{{ $setting->key }}</code></p>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Configuration Key
+            </label>
+
+            <input
+                type="text"
+                value="{{ $setting->key }}"
+                readonly
+                class="w-full rounded-lg border-gray-300 bg-gray-100 text-gray-600"
+            >
         </div>
-        <a href="{{ route('settings.index') }}" class="btn-secondary flex items-center gap-1 text-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            Back
-        </a>
-    </div>
 
-    <div class="card">
-        <div class="card-body">
-            <form action="{{ route('settings.update', $setting) }}" method="POST" class="space-y-6">
-                @csrf @method('PUT')
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Key</label>
-                        <input type="text" readonly class="input-field bg-slate-50 text-slate-500 cursor-not-allowed" value="{{ $setting->key }}">
-                        <p class="mt-1 text-xs text-slate-400">Key cannot be changed after creation</p>
-                    </div>
+            {{-- Type --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Type
+                </label>
 
-                    <div>
-                        <label for="type" class="block text-sm font-semibold text-slate-700 mb-1.5">Type <span class="text-red-500">*</span></label>
-                        <select name="type" id="type" required class="input-field @error('type') error @enderror">
-                            <option value="text" {{ $setting->type == 'text' ? 'selected' : '' }}>Text</option>
-                            <option value="number" {{ $setting->type == 'number' ? 'selected' : '' }}>Number</option>
-                            <option value="boolean" {{ $setting->type == 'boolean' ? 'selected' : '' }}>Boolean</option>
-                            <option value="select" {{ $setting->type == 'select' ? 'selected' : '' }}>Select</option>
-                            <option value="textarea" {{ $setting->type == 'textarea' ? 'selected' : '' }}>Textarea</option>
-                            <option value="json" {{ $setting->type == 'json' ? 'selected' : '' }}>JSON</option>
-                            <option value="color" {{ $setting->type == 'color' ? 'selected' : '' }}>Color</option>
-                            <option value="email" {{ $setting->type == 'email' ? 'selected' : '' }}>Email</option>
-                            <option value="url" {{ $setting->type == 'url' ? 'selected' : '' }}>URL</option>
-                        </select>
-                        @error('type')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                <select
+                    name="type"
+                    class="w-full rounded-lg border-gray-300"
+                >
+                    @foreach([
+                        'text',
+                        'number',
+                        'boolean',
+                        'select',
+                        'textarea',
+                        'json',
+                        'color',
+                        'email',
+                        'url'
+                    ] as $type)
 
-                    <div>
-                        <label for="group" class="block text-sm font-semibold text-slate-700 mb-1.5">Group <span class="text-red-500">*</span></label>
-                        <input type="text" name="group" id="group" required class="input-field @error('group') error @enderror" value="{{ old('group', $setting->group) }}">
-                        @error('group')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                        <option
+                            value="{{ $type }}"
+                            @selected($setting->type === $type)
+                        >
+                            {{ ucfirst($type) }}
+                        </option>
 
-                    <div>
-                        <label for="label" class="block text-sm font-semibold text-slate-700 mb-1.5">Label <span class="text-red-500">*</span></label>
-                        <input type="text" name="label" id="label" required class="input-field @error('label') error @enderror" value="{{ old('label', $setting->label) }}">
-                        @error('label')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                    @endforeach
+                </select>
+            </div>
 
-                    <div class="md:col-span-2">
-                        <label for="description" class="block text-sm font-semibold text-slate-700 mb-1.5">Description</label>
-                        <textarea name="description" id="description" rows="2" class="input-field @error('description') error @enderror">{{ old('description', $setting->description) }}</textarea>
-                        @error('description')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+            {{-- Group --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Group
+                </label>
 
-                    <div class="md:col-span-2">
-                        <label for="value" class="block text-sm font-semibold text-slate-700 mb-1.5">Value</label>
-                        @if($setting->type == 'boolean')
-                            <select name="value" id="value" class="input-field">
-                                <option value="1" {{ $setting->value == '1' || $setting->value === true ? 'selected' : '' }}>true</option>
-                                <option value="0" {{ $setting->value == '0' || $setting->value === false ? 'selected' : '' }}>false</option>
-                            </select>
-                        @elseif($setting->type == 'textarea')
-                            <textarea name="value" id="value" rows="4" class="input-field font-mono @error('value') error @enderror">{{ old('value', $setting->value) }}</textarea>
-                        @else
-                            <input type="text" name="value" id="value" class="input-field font-mono @error('value') error @enderror" value="{{ old('value', $setting->value) }}">
-                        @endif
-                        @error('value')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                <input
+                    type="text"
+                    name="group"
+                    value="{{ old('group', $setting->group) }}"
+                    required
+                    class="w-full rounded-lg border-gray-300"
+                >
+            </div>
 
-                    <div>
-                        <label for="environment_id" class="block text-sm font-semibold text-slate-700 mb-1.5">Environment</label>
-                        <select name="environment_id" id="environment_id" class="input-field">
-                            <option value="">Global (all environments)</option>
-                            @foreach($environments as $env)
-                                <option value="{{ $env->id }}" {{ $setting->environment_id == $env->id ? 'selected' : '' }}>
-                                    {{ $env->name }} ({{ $env->key }})
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('environment_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+            {{-- Label --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Label
+                </label>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Status</label>
-                        <label class="flex items-center gap-2 cursor-pointer mt-2">
-                            <input type="checkbox" name="is_active" value="1" {{ $setting->is_active ? 'checked' : '' }} class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                            <span class="text-sm text-slate-700">Active</span>
-                        </label>
-                    </div>
+                <input
+                    type="text"
+                    name="label"
+                    value="{{ old('label', $setting->label) }}"
+                    required
+                    class="w-full rounded-lg border-gray-300"
+                >
+            </div>
+
+            {{-- Environment --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Environment
+                </label>
+
+                <select
+                    name="environment_id"
+                    class="w-full rounded-lg border-gray-300"
+                >
+                    <option value="">
+                        Global Setting
+                    </option>
+
+                    @foreach($environments as $environment)
+
+                        <option
+                            value="{{ $environment->id }}"
+                            @selected(
+                                old(
+                                    'environment_id',
+                                    $setting->environment_id
+                                ) == $environment->id
+                            )
+                        >
+                            {{ $environment->name }}
+                        </option>
+
+                    @endforeach
+
+                </select>
+            </div>
+
+        </div>
+
+        {{-- Description --}}
+        <div class="mt-6">
+
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Description
+            </label>
+
+            <textarea
+                name="description"
+                rows="3"
+                class="w-full rounded-lg border-gray-300"
+            >{{ old('description', $setting->description) }}</textarea>
+
+        </div>
+
+        {{-- Sensitive --}}
+        <div class="mt-6">
+
+            <label class="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+
+                <input
+                    type="checkbox"
+                    name="is_sensitive"
+                    value="1"
+                    class="mt-1 rounded border-gray-300 text-amber-600"
+                    @checked(old('is_sensitive', $setting->is_sensitive))
+                >
+
+                <span>
+
+                    <span class="block font-semibold text-amber-900">
+                        Sensitive Configuration
+                    </span>
+
+                    <span class="block text-sm text-amber-800 mt-1">
+                        Encrypt this value and mask it from the dashboard.
+                    </span>
+
+                </span>
+
+            </label>
+
+        </div>
+
+        {{-- Current Value --}}
+        <div class="mt-6">
+
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Configuration Value
+            </label>
+
+            @if($setting->is_sensitive)
+
+                <div class="mb-3 p-3 bg-gray-100 rounded-lg text-sm text-gray-600">
+                    <i class="fa-solid fa-lock mr-1"></i>
+
+                    Current value is protected.
+
+                    Enter a new value below only if you want to replace it.
                 </div>
 
-                <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
-                    <a href="{{ route('settings.index') }}" class="btn-secondary">Cancel</a>
-                    <button type="submit" class="btn-primary flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Update Setting
-                    </button>
-                </div>
-            </form>
+            @endif
+
+            @if($setting->type === 'boolean')
+
+                <select
+                    name="value"
+                    class="w-full rounded-lg border-gray-300"
+                >
+                    <option
+                        value="true"
+                        @selected((string) $setting->value === 'true')
+                    >
+                        True
+                    </option>
+
+                    <option
+                        value="false"
+                        @selected((string) $setting->value === 'false')
+                    >
+                        False
+                    </option>
+                </select>
+
+            @elseif($setting->type === 'textarea' || $setting->type === 'json')
+
+                <textarea
+                    name="value"
+                    rows="6"
+                    class="w-full rounded-lg border-gray-300"
+                >{{ $setting->is_sensitive ? '' : (is_array($setting->value) ? json_encode($setting->value, JSON_PRETTY_PRINT) : $setting->value) }}</textarea>
+
+            @else
+
+                <input
+                    type="{{ $setting->type === 'number' ? 'number' : 'text' }}"
+                    name="value"
+                    value="{{ $setting->is_sensitive ? '' : $setting->value }}"
+                    class="w-full rounded-lg border-gray-300"
+                    placeholder="{{ $setting->is_sensitive ? 'Enter new protected value' : 'Enter value' }}"
+                >
+
+            @endif
+
         </div>
-    </div>
+
+        {{-- Status --}}
+        <div class="mt-6">
+
+            <label class="flex items-center gap-2">
+
+                <input
+                    type="checkbox"
+                    name="is_active"
+                    value="1"
+                    class="rounded border-gray-300 text-indigo-600"
+                    @checked($setting->is_active)
+                >
+
+                <span class="text-sm text-gray-700">
+                    Active
+                </span>
+
+            </label>
+
+        </div>
+
+        <div class="flex justify-between mt-8">
+
+            <a
+                href="{{ route('settings.history', $setting) }}"
+                class="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+                <i class="fa-solid fa-clock-rotate-left mr-1"></i>
+                View History
+            </a>
+
+            <div class="flex gap-3">
+
+                <a
+                    href="{{ route('settings.index') }}"
+                    class="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="px-5 py-2.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                >
+                    Update Setting
+                </button>
+
+            </div>
+
+        </div>
+
+    </form>
+
 </div>
+
 @endsection

@@ -1,75 +1,509 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
+
+<div class="max-w-6xl mx-auto">
+
+    <!-- ========================================================= -->
+    <!-- Header -->
+    <!-- ========================================================= -->
+
     <div class="flex items-center justify-between mb-6">
+
         <div>
-            <h1 class="text-xl font-bold text-slate-800">Setting History</h1>
-            <p class="text-sm text-slate-500 mt-1">
-                Audit log for <code class="bg-slate-100 px-2 py-0.5 rounded text-sm font-mono">{{ $setting->key }}</code>
-                <span class="ml-2 text-slate-400">- {{ $setting->label }}</span>
+
+            <h1 class="text-2xl font-bold text-gray-900">
+                Configuration History
+            </h1>
+
+            <p class="text-gray-500 mt-1">
+                {{ $setting->label }}
+
+                <span class="text-gray-400">
+                    ({{ $setting->key }})
+                </span>
             </p>
+
         </div>
-        <a href="{{ route('settings.index') }}" class="btn-secondary flex items-center gap-1 text-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+
+
+        <a
+            href="{{ route('settings.index') }}"
+            class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+        >
+
+            <i class="fa-solid fa-arrow-left mr-1"></i>
+
             Back
+
         </a>
+
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h2 class="text-sm font-semibold text-slate-800">Change History</h2>
-        </div>
-        <div class="divide-y divide-slate-100">
-            @forelse($histories as $history)
-            <div class="px-5 py-4 hover:bg-slate-50 transition-colors">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-3">
-                        @php
-                            $actionColor = match($history->action) {
-                                'created' => 'badge-green',
-                                'updated' => 'badge-blue',
-                                'deleted' => 'badge-red',
-                                'rollback' => 'badge-purple',
-                                'bulk_updated' => 'badge-yellow',
-                                default => 'badge-gray',
-                            };
-                        @endphp
-                        <span class="badge {{ $actionColor }}">{{ $history->action }}</span>
-                        <span class="text-xs text-slate-400">{{ $history->created_at->format('M d, Y \a\t H:i') }}</span>
-                    </div>
-                    @if($history->action !== 'deleted')
-                        <form action="{{ route('settings.rollback', [$setting, $history]) }}" method="POST" class="inline" onsubmit="return confirm('Rollback this setting to the previous value?')">
-                            @csrf @method('POST')
-                            <button type="submit" class="text-xs font-semibold text-purple-600 hover:text-purple-800 flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-                                Rollback
-                            </button>
-                        </form>
-                    @endif
-                </div>
-                <div class="flex items-center gap-4 text-sm">
-                    <div class="flex-1">
-                        <span class="font-semibold text-slate-700">From:</span>
-                        <code class="ml-1 text-xs bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600">{{ $history->old_value ?? '(empty)' }}</code>
-                    </div>
-                    <svg class="w-4 h-4 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                    <div class="flex-1">
-                        <span class="font-semibold text-slate-700">To:</span>
-                        <code class="ml-1 text-xs bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600">{{ $history->new_value ?? '(empty)' }}</code>
-                    </div>
-                </div>
-                <div class="mt-2 text-xs text-slate-400">
-                    Changed by: <span class="font-medium text-slate-500">{{ $history->changed_by ?? 'system' }}</span>
-                </div>
+
+    <!-- ========================================================= -->
+    <!-- Sensitive Configuration Notice -->
+    <!-- ========================================================= -->
+
+    @if($setting->is_sensitive)
+
+        <div class="mb-5 p-4 rounded-lg bg-amber-50 border border-amber-200">
+
+            <div class="flex items-center gap-2 text-amber-900 font-semibold">
+
+                <i class="fa-solid fa-lock"></i>
+
+                Sensitive Configuration
+
             </div>
-            @empty
-            <div class="px-5 py-12 text-center">
-                <svg class="w-10 h-10 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <p class="text-sm text-slate-400">No history records found for this setting.</p>
-            </div>
-            @endforelse
+
+            <p class="text-sm text-amber-800 mt-1">
+
+                Historical values are encrypted and are never displayed
+                in plaintext. Rollback restores the selected version
+                without exposing the secret.
+
+            </p>
+
         </div>
+
+    @endif
+
+
+    <!-- ========================================================= -->
+    <!-- Current Configuration -->
+    <!-- ========================================================= -->
+
+    <div class="mb-5 bg-white border border-gray-200 rounded-xl shadow-sm">
+
+        <div class="px-6 py-4 border-b border-gray-200">
+
+            <div class="flex items-center justify-between">
+
+                <div>
+
+                    <h2 class="text-sm font-bold text-gray-800">
+                        Current Configuration
+                    </h2>
+
+                    <p class="text-xs text-gray-500 mt-1">
+                        Current value stored for this setting
+                    </p>
+
+                </div>
+
+                @if($setting->is_sensitive)
+
+                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+
+                        <i class="fa-solid fa-lock mr-1"></i>
+
+                        Protected
+
+                    </span>
+
+                @endif
+
+            </div>
+
+        </div>
+
+
+        <div class="px-6 py-4">
+
+            @if($setting->is_sensitive)
+
+                <span class="font-mono text-gray-400 tracking-wider">
+                    ••••••••••••
+                </span>
+
+            @else
+
+                @if(is_array($setting->value))
+
+                    <pre class="font-mono text-xs text-gray-600 whitespace-pre-wrap">{{ json_encode($setting->value, JSON_PRETTY_PRINT) }}</pre>
+
+                @else
+
+                    <span class="font-mono text-sm text-gray-600 whitespace-pre-wrap">
+                        {{ $setting->value ?? '—' }}
+                    </span>
+
+                @endif
+
+            @endif
+
+        </div>
+
     </div>
+
+
+    <!-- ========================================================= -->
+    <!-- History Table -->
+    <!-- ========================================================= -->
+
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+
+        <div class="px-6 py-4 border-b border-gray-200">
+
+            <div class="flex items-center justify-between">
+
+                <div>
+
+                    <h2 class="text-sm font-bold text-gray-800">
+                        Change History
+                    </h2>
+
+                    <p class="text-xs text-gray-500 mt-1">
+                        Review previous configuration versions and restore
+                        an earlier value.
+                    </p>
+
+                </div>
+
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+
+                    {{ $histories->count() }} Records
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="overflow-x-auto">
+
+            <table class="w-full text-sm">
+
+                <!-- ================================================= -->
+                <!-- Table Header -->
+                <!-- ================================================= -->
+
+                <thead class="bg-gray-50 border-b border-gray-200">
+
+                    <tr>
+
+                        <th class="text-left px-6 py-4">
+                            Action
+                        </th>
+
+                        <th class="text-left px-6 py-4">
+                            Previous Value
+                        </th>
+
+                        <th class="text-left px-6 py-4">
+                            New Value
+                        </th>
+
+                        <th class="text-left px-6 py-4">
+                            Changed By
+                        </th>
+
+                        <th class="text-left px-6 py-4">
+                            Date
+                        </th>
+
+                        <th class="text-right px-6 py-4">
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <!-- ================================================= -->
+                <!-- Table Body -->
+                <!-- ================================================= -->
+
+                <tbody class="divide-y divide-gray-100">
+
+                    @forelse($histories as $history)
+
+                        <tr class="hover:bg-gray-50 transition">
+
+
+                            <!-- ===================================== -->
+                            <!-- Action -->
+                            <!-- ===================================== -->
+
+                            <td class="px-6 py-4">
+
+                                @php
+
+                                    $badge = match($history->action) {
+
+                                        'created'
+                                            => 'bg-green-100 text-green-700',
+
+                                        'updated'
+                                            => 'bg-blue-100 text-blue-700',
+
+                                        'deleted'
+                                            => 'bg-red-100 text-red-700',
+
+                                        'rollback'
+                                            => 'bg-purple-100 text-purple-700',
+
+                                        'bulk_updated'
+                                            => 'bg-indigo-100 text-indigo-700',
+
+                                        'imported'
+                                            => 'bg-orange-100 text-orange-700',
+
+                                        default
+                                            => 'bg-gray-100 text-gray-700',
+
+                                    };
+
+                                @endphp
+
+
+                                <div class="flex items-center gap-2">
+
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold {{ $badge }}">
+
+                                        {{ ucfirst(str_replace('_', ' ', $history->action)) }}
+
+                                    </span>
+
+
+                                    @if($history->is_sensitive)
+
+                                        <span
+                                            class="px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-700"
+                                            title="Sensitive values are encrypted"
+                                        >
+
+                                            <i class="fa-solid fa-lock"></i>
+
+                                        </span>
+
+                                    @endif
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- ===================================== -->
+                            <!-- Previous Value -->
+                            <!-- ===================================== -->
+
+                            <td class="px-6 py-4 text-gray-600 max-w-xs">
+
+                                @if($history->is_sensitive)
+
+                                    <span class="font-mono text-gray-400 tracking-wider">
+                                        ••••••••••••
+                                    </span>
+
+                                @else
+
+                                    @if(is_null($history->old_value))
+
+                                        <span class="text-gray-400">
+                                            —
+                                        </span>
+
+                                    @else
+
+                                        <span class="font-mono whitespace-pre-wrap break-words">
+                                            {{ $history->old_value }}
+                                        </span>
+
+                                    @endif
+
+                                @endif
+
+                            </td>
+
+
+                            <!-- ===================================== -->
+                            <!-- New Value -->
+                            <!-- ===================================== -->
+
+                            <td class="px-6 py-4 text-gray-600 max-w-xs">
+
+                                @if($history->is_sensitive)
+
+                                    <span class="font-mono text-gray-400 tracking-wider">
+                                        ••••••••••••
+                                    </span>
+
+                                @else
+
+                                    @if(is_null($history->new_value))
+
+                                        <span class="text-gray-400">
+                                            —
+                                        </span>
+
+                                    @else
+
+                                        <span class="font-mono whitespace-pre-wrap break-words">
+                                            {{ $history->new_value }}
+                                        </span>
+
+                                    @endif
+
+                                @endif
+
+                            </td>
+
+
+                            <!-- ===================================== -->
+                            <!-- Changed By -->
+                            <!-- ===================================== -->
+
+                            <td class="px-6 py-4 text-gray-600">
+
+                                <div class="flex items-center gap-2">
+
+                                    <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
+
+                                        <i class="fa-solid fa-user text-xs"></i>
+
+                                    </div>
+
+                                    <span>
+                                        {{ $history->changed_by ?? 'system' }}
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- ===================================== -->
+                            <!-- Date -->
+                            <!-- ===================================== -->
+
+                            <td class="px-6 py-4 text-gray-500 whitespace-nowrap">
+
+                                {{ $history->created_at->format('d M Y, h:i A') }}
+
+                            </td>
+
+
+                            <!-- ===================================== -->
+                            <!-- Rollback Action -->
+                            <!-- ===================================== -->
+
+                            <td class="px-6 py-4 text-right">
+
+                                @php
+
+                                    /*
+                                     * Rollback is available only when:
+                                     *
+                                     * - The record has a previous value.
+                                     * - It is not a deleted record.
+                                     * - It is not the initial created record.
+                                     */
+
+                                    $canRollback =
+                                        $history->old_value !== null
+                                        && !in_array(
+                                            $history->action,
+                                            ['created', 'deleted']
+                                        );
+
+                                @endphp
+
+
+                                @if($canRollback)
+
+                                    <form
+                                        action="{{ route('settings.rollback', [
+                                            'setting' => $setting->id,
+                                            'history' => $history->id,
+                                        ]) }}"
+                                        method="POST"
+                                        class="inline"
+                                        onsubmit="return confirm('Are you sure you want to rollback this configuration to this version?')"
+                                    >
+
+                                        @csrf
+
+                                        <button
+                                            type="submit"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 text-white hover:bg-purple-700 text-xs font-medium transition"
+                                            title="Rollback to this version"
+                                        >
+
+                                            <i class="fa-solid fa-rotate-left"></i>
+
+                                            Rollback
+
+                                        </button>
+
+                                    </form>
+
+                                @elseif($history->action === 'rollback')
+
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50 text-purple-600 text-xs font-medium">
+
+                                        <i class="fa-solid fa-rotate-left"></i>
+
+                                        Rolled Back
+
+                                    </span>
+
+                                @else
+
+                                    <span class="text-xs text-gray-400">
+                                        —
+                                    </span>
+
+                                @endif
+
+                            </td>
+
+                        </tr>
+
+                    @empty
+
+                        <tr>
+
+                            <td
+                                colspan="6"
+                                class="px-6 py-12 text-center text-gray-500"
+                            >
+
+                                <div class="flex flex-col items-center">
+
+                                    <div class="w-12 h-12 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center">
+
+                                        <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+
+                                    </div>
+
+                                    <p class="mt-3 font-medium text-gray-600">
+                                        No configuration history found.
+                                    </p>
+
+                                    <p class="text-xs text-gray-400 mt-1">
+                                        Changes to this setting will appear here.
+                                    </p>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    @endforelse
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
 </div>
+
 @endsection

@@ -59,8 +59,10 @@ class EnvironmentSettingsSeeder extends Seeder
             'type' => 'text',
             'group' => 'google',
             'label' => 'Google API Token',
-            'description' => 'API token for Google services integration',
+            'description' => 'Authentication token used for Google API integrations.',
             'is_active' => true,
+            'is_sensitive' => true,
+            'environment_id' => null,
         ]);
 
         Setting::create([
